@@ -1,0 +1,8 @@
+يضيف ملف GitHub Actions الأذونات التالية تلقائياً إلى AndroidManifest.xml أثناء البناء:
+
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+إذا أنشأت مشروع Flutter محلياً يدوياً، أضف هذه الأسطر داخل وسم <manifest> وقبل <application>.
+لا تضفها خارج وسم manifest.
