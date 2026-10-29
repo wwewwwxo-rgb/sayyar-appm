@@ -3,9 +3,7 @@ name: Build SAYYAR APK
 
 on:
   push:
-    branches:
-      - main
-      - master
+    branches: [main, master]
   workflow_dispatch:
 
 permissions:
@@ -26,41 +24,35 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Check source files
+      - name: Prepare Flutter source
         run: |
           test -f pubspec.yaml
+          mkdir -p lib
+          if [ -f main.dart ] && [ ! -f lib/main.dart ]; then
+            cp main.dart lib/main.dart
+          fi
           test -f lib/main.dart
 
       - name: Generate Android platform
         run: |
-          flutter create \
-            --platforms=android \
-            --org com.sayyar.app \
-            --project-name sayyar \
-            /tmp/sayyar_android
-          cp -R /tmp/sayyar_android/android ./android
-
-      - name: Configure Android permissions
+          flutter create --platforms=android --org com.sayyar.app --project-name sayyar .
+          
+      - name: Configure permissions
         run: |
           python3 - <<'PY'
           from pathlib import Path
-
           p = Path("android/app/src/main/AndroidManifest.xml")
           s = p.read_text()
           pos = s.find(">")
-
-          if pos == -1:
+          if pos < 0:
               raise SystemExit("Invalid AndroidManifest.xml")
-
           permissions = """
               <uses-permission android:name="android.permission.INTERNET"/>
               <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
               <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
           """
-
           if "android.permission.ACCESS_FINE_LOCATION" not in s:
               s = s[:pos + 1] + permissions + s[pos + 1:]
-
           p.write_text(s)
           PY
 
@@ -73,7 +65,7 @@ jobs:
       - name: Build release APK
         run: flutter build apk --release
 
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: SAYYAR-APK
